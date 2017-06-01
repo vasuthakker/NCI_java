@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd
+http://www.springframework.org/schema/aop
+http://www.springframework.org/schema/aop/spring-aop.xsd
+http://www.springframework.org/schema/mvc 
+http://www.springframework.org/schema/mvc/spring-mvc.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd
+">
+
+	<context:annotation-config />
+	<context:component-scan base-package="ep" />
+	<mvc:annotation-driven enable-matrix-variables="true" />
+	<!-- <bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="1048576000" />
+		<property name="maxInMemorySize" value="524288000" />
+	</bean> -->
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+	<!-- email configration start -->
+	 <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+		<property name="port" value="587" />
+		<property name="username" value="donotreply@easypay.in" />
+		<property name="password" value="vbsvijay" />
+		<property name="javaMailProperties">
+			<props>  
+              <prop key="mail.smtp.auth">true</prop>  
+              <prop key="mail.smtp.starttls.enable">true</prop>
+        	</props>  
+		</property>
+	</bean>
+	<bean 
+class ="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/> 
+ 
+ 	<bean id="notificationServiceSms" class="ep.nci.Service.SmsNotificationServiceImpl" >
+ 	</bean>
+ 	<bean id="notificationServiceEmail" class="ep.nci.Service.EmailNotificationServiceImpl" >
+ 	</bean> 
+ 
+ 
+<!-- email configration end -->
+
+	<!-- hibernate connection 1 start -->
+	<context:property-placeholder location="/WEB-INF/serverDB.properties" />
+	<bean id="dataSource" destroy-method="close"
+		class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="${mysql.driverClassName}" />
+		<property name="url" value="${mysql.url}" />
+		<property name="fastFailValidation" value="${mysql.fastFailValidation}" />
+		<property name="username" value="${mysql.username}" />
+		<property name="password" value="${mysql.password}" />
+		<property name="initialSize" value="${mysql.initialSize}" />
+		<property name="maxTotal" value="${mysql.maxTotal}" />
+		<property name="maxIdle" value="${mysql.maxIdle}" />
+		<property name="maxWaitMillis" value="${mysql.maxWaitMillis}" />
+		<property name="removeAbandonedOnMaintenance" value="true" />
+		<property name="removeAbandonedOnBorrow" value="true" />		
+		<property name="validationQuery" value="select 1" />
+		<property name="timeBetweenEvictionRunsMillis" value="5000" />
+		<property name="minEvictableIdleTimeMillis" value="30000" /> 
+		<property name="removeAbandonedTimeout" value="60" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="true" />
+		<property name="testOnReturn" value="false" />
+	</bean>
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+		destroy-method="destroy">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${mysql.dialect}</prop>
+				<prop key="hibernate.show_sql">${mysql.show_sql}</prop>
+				<prop key="hibernate.hbm2ddl.auto">${mysql.hbm2ddl.auto}</prop>
+				<prop key="hibernate.query.substitutions">${mysql.query.substitutions}</prop>
+				<prop key="hibernate.cache.use_second_level_cache">${mysql.use_second_level_cache}</prop>
+				<prop key="hibernate.cache.use_structured_entries">${mysql.use_structured_entries}</prop>
+				<prop key="hibernate.cache.provider_class">${mysql.cache.provider_class}</prop>
+				<prop key="hibernate.enable_lazy_load_no_trans">${mysql.enable_lazy_load_no_trans}</prop>
+				<prop key="hibernate.transaction.flush_before_completion">${mysql.transaction.flush_before_completion}</prop>
+				<prop key="hibernate.transaction.auto_close_session">${mysql.transaction.auto_close_session}</prop>
+				<!-- <prop key="hibernate.current_session_context_class">${mysql.current_session_context_class}</prop> -->
+			</props>
+		</property>
+		<property name="packagesToScan">
+			<list>
+				<value>ep</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- Transaction manager for a single Hibernate SessionFactory (alternative 
+			to JTA) -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	<!-- hibernate connection 1 end -->
+	
+	<tx:annotation-driven proxy-target-class="true"
+			transaction-manager="transactionManager" />
+
+<!-- 	<tx:annotation-driven  -->
+<!-- 			transaction-manager="transactionManager" /> -->
+
+			
+	<!-- <tx:annotation-driven proxy-target-class="true"
+			transaction-manager="transactionManagerMoney" />
+ -->
+	<bean id="persistenceExceptionTranslationPostProcessor"
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+		
+	<!-- FOR SECURITY -->
+	<import resource="security-context.xml"/>
+</beans>
